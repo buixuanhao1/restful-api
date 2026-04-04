@@ -1,6 +1,7 @@
 package vn.bxh.jobhunter.service;
 
 import lombok.AllArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -21,11 +22,19 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@AllArgsConstructor
 public class ResumeService {
     private final ResumeRepository resumeRepository;
     private final JobRepository jobRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
+
+    public ResumeService(ResumeRepository resumeRepository, JobRepository jobRepository,
+                         UserRepository userRepository, @Lazy NotificationService notificationService) {
+        this.resumeRepository = resumeRepository;
+        this.jobRepository = jobRepository;
+        this.userRepository = userRepository;
+        this.notificationService = notificationService;
+    }
 
     public long countResumesByJob(Long jobId) {
         return resumeRepository.countByJobId(jobId);
@@ -109,7 +118,13 @@ public class ResumeService {
                 resumeUpdate.setUser(resume.getUser());
             }
             resumeUpdate.setStatus(resume.getStatus());
-            return this.resumeRepository.save(resumeUpdate);
+            Resume saved = this.resumeRepository.save(resumeUpdate);
+            // Gửi thông báo cho ứng viên khi trạng thái thay đổi
+            if (saved.getUser() != null && saved.getJob() != null) {
+                notificationService.notifyResumeStatusChange(
+                    saved.getUser(), saved.getJob().getName(), saved.getStatus().name());
+            }
+            return saved;
         }else{
             throw new IdInvalidException("Id is not valid!");
         }

@@ -28,38 +28,36 @@ public class PermissionInterceptor implements HandlerInterceptor {
             throws Exception {
 
         String path = (String) request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
-        String requestURI = request.getRequestURI();
         String httpMethod = request.getMethod();
 
-        // Các API cho phép truy cập không cần kiểm tra quyền với GET
-        List<String> whiteListGetApis = List.of(
-                "/api/v1/companies",
-                "/api/v1/jobs",
-                "/api/v1/skills"
+        // Chỉ kiểm tra permission cho các module admin nhạy cảm.
+        // Tính năng người dùng thông thường (chat, blog, thông báo, saved jobs...) cho qua.
+        List<String> adminOnlyPrefixes = List.of(
+                "/api/v1/users",
+                "/api/v1/roles",
+                "/api/v1/permissions"
         );
 
-        if ("GET".equalsIgnoreCase(httpMethod) && whiteListGetApis.contains(path)) {
-            return true; // Bỏ qua kiểm tra quyền
-        }
-        System.out.println(">>> RUN preHandle");
-        System.out.println(">>> path= " + path);
-        System.out.println(">>> httpMethod= " + httpMethod);
-        System.out.println(">>> requestURI= " + requestURI);
+        boolean isAdminPath = adminOnlyPrefixes.stream().anyMatch(prefix ->
+                path != null && (path.equals(prefix) || path.startsWith(prefix + "/")));
 
+        if (!isAdminPath) return true;
+
+        // Với admin path: kiểm tra user đã đăng nhập và có quyền không
         String email = SecurityUtil.getCurrentUserLogin().orElse("");
-        User user = this.userRepository.findByEmail(email);
+        if (email.isEmpty()) return true; // Security filter đã xử lý auth
 
-        if (user != null) {
-            Role role = user.getRole();
-            if (role != null) {
-                List<Permission> permissions = role.getPermissions();
-                boolean isAllow = permissions.stream().anyMatch(item ->
-                        item.getApiPath().equals(path) &&
-                                item.getMethod().equals(httpMethod));
-                if (isAllow) return true;
-                else throw new IdInvalidException("Bạn không có quyền truy cập API này.");
-            }
-        }
-        throw new IdInvalidException("Không xác định được người dùng hoặc vai trò.");
+        User user = this.userRepository.findByEmail(email);
+        if (user == null) return true;
+
+        Role role = user.getRole();
+        if (role == null) throw new IdInvalidException("Tài khoản chưa được gán vai trò.");
+
+        List<Permission> permissions = role.getPermissions();
+        boolean isAllow = permissions.stream().anyMatch(p ->
+                p.getApiPath().equals(path) && p.getMethod().equals(httpMethod));
+
+        if (!isAllow) throw new IdInvalidException("Bạn không có quyền truy cập API này.");
+        return true;
     }
 }

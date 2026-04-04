@@ -17,6 +17,7 @@ import jakarta.validation.Valid;
 import vn.bxh.jobhunter.domain.User;
 import vn.bxh.jobhunter.domain.request.ReqLoginDTO;
 import vn.bxh.jobhunter.domain.response.ResCreateUserDTO;
+import vn.bxh.jobhunter.domain.Role;
 import vn.bxh.jobhunter.domain.response.ResLoginDTO;
 import vn.bxh.jobhunter.service.UserService;
 import vn.bxh.jobhunter.util.SecurityUtil;
@@ -46,10 +47,18 @@ public class AuthController {
 
         boolean existsEmail = this.userService.existEmail(user.getEmail());
         if (existsEmail == true) {
-            throw new IdInvalidException("Email not found!" + user.getEmail());
+            throw new IdInvalidException("Email đã được sử dụng: " + user.getEmail());
         }
         String passwordEncode = passwordEncoder.encode(user.getPassword());
         user.setPassword(passwordEncode);
+
+        // Mặc định gán role USER (id=2) nếu chưa có role
+        if (user.getRole() == null || user.getRole().getId() == 0) {
+            Role defaultRole = new Role();
+            defaultRole.setId(2L);
+            user.setRole(defaultRole);
+        }
+
         return ResponseEntity.status(HttpStatus.CREATED).body(this.userService.HandleSaveUser(user));
     }
 

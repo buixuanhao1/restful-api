@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,13 +18,33 @@ public class FileService {
     @Value("${hao.upload-file.base-uri}")
     private String baseUri;
 
+    // Convert "file:///D:/..." URI string to a plain filesystem Path
+    private Path toPath(String uriString) {
+        // Strip the "file:///" prefix if present, then build a Path directly
+        String normalized = uriString;
+        if (normalized.startsWith("file:///")) {
+            normalized = normalized.substring(8); // remove "file:///"
+        } else if (normalized.startsWith("file://")) {
+            normalized = normalized.substring(7);
+        } else if (normalized.startsWith("file:/")) {
+            normalized = normalized.substring(6);
+        }
+        return Paths.get(normalized);
+    }
+
+    // Sanitize filename: replace spaces and special URI-unsafe chars
+    private String sanitizeFilename(String name) {
+        if (name == null) return "file";
+        // Replace spaces and parentheses with underscores
+        return name.replaceAll("[\\s()\\[\\]{}#%&]", "_");
+    }
+
     public void createDirector(String folder) throws URISyntaxException {
-        URI uri = new URI(folder);
-        Path path = Paths.get(uri);
+        Path path = toPath(folder);
         File tmpDir = new File(path.toString());
         if (!tmpDir.isDirectory()) {
             try {
-                Files.createDirectory(tmpDir.toPath());
+                Files.createDirectories(tmpDir.toPath());
                 System.out.println(">>> CREATE NEW DIRECTORY SUCCESSFUL, PATH = " + tmpDir.toPath());
             } catch (IOException e) {
                 e.printStackTrace();
@@ -35,39 +54,26 @@ public class FileService {
         }
     }
 
-    public String store(MultipartFile file, String folder) throws URISyntaxException,
-            IOException {
-        // create unique filename
-        String finalName = System.currentTimeMillis() + "-" + file.getOriginalFilename();
-        URI uri = new URI(baseUri + folder + "/" + finalName);
-        Path path = Paths.get(uri);
+    public String store(MultipartFile file, String folder) throws URISyntaxException, IOException {
+        String safeName = sanitizeFilename(file.getOriginalFilename());
+        String finalName = System.currentTimeMillis() + "-" + safeName;
+        Path path = toPath(baseUri + folder + "/" + finalName);
         try (InputStream inputStream = file.getInputStream()) {
-            Files.copy(inputStream, path,
-                    StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(inputStream, path, StandardCopyOption.REPLACE_EXISTING);
         }
         return finalName;
     }
 
     public long getFileLength(String fileName, String folder) throws URISyntaxException {
-        URI uri = new URI(baseUri + folder + "/" + fileName);
-        Path path = Paths.get(uri);
-
-        File tmpDir = new File(path.toString());
-
-        // file không tồn tại, hoặc file là 1 directory => return 0
-        if (!tmpDir.exists() || tmpDir.isDirectory())
-            return 0;
-
+        Path path = toPath(baseUri + folder + "/" + fileName);
+        File tmpDir = path.toFile();
+        if (!tmpDir.exists() || tmpDir.isDirectory()) return 0;
         return tmpDir.length();
     }
 
     public InputStreamResource getResource(String fileName, String folder)
             throws URISyntaxException, FileNotFoundException {
-        URI uri = new URI(baseUri + folder + "/" + fileName);
-        Path path = Paths.get(uri);
-
-        File file = new File(path.toString());
-        return new InputStreamResource(new FileInputStream(file));
+        Path path = toPath(baseUri + folder + "/" + fileName);
+        return new InputStreamResource(new FileInputStream(path.toFile()));
     }
-
 }

@@ -55,7 +55,9 @@ public class SecurityConfiguration {
                         .requestMatchers(listApi).permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/v1/companies").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/v1/jobs").permitAll()
-                        .requestMatchers(HttpMethod.GET,"/api/v1/skills").permitAll()// Trang chủ không cần login
+                        .requestMatchers(HttpMethod.GET,"/api/v1/skills").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/api/v1/posts").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/api/v1/posts/**").permitAll()// Trang chủ không cần login
                         .anyRequest().authenticated())
                 .formLogin(f -> f.disable())
 //                .exceptionHandling(

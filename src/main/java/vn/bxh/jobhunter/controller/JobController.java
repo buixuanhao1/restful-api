@@ -49,8 +49,42 @@ public class JobController {
     }
 
     @GetMapping("/jobs")
-    public ResponseEntity<ResultPaginationDTO> getAllJobs(@Filter Specification<Job> spec, Pageable pageable){
-        return ResponseEntity.ok(this.jobService.FindAllJobs(spec,pageable));
+    public ResponseEntity<ResultPaginationDTO> getAllJobs(
+            @Filter Specification<Job> spec,
+            Pageable pageable,
+            @RequestParam(required = false) Double minSalary,
+            @RequestParam(required = false) Double maxSalary,
+            @RequestParam(required = false) String level,
+            @RequestParam(required = false) String location,
+            @RequestParam(required = false) Long skillId) {
+
+        Specification<Job> finalSpec = spec;
+
+        if (minSalary != null) {
+            Specification<Job> s = (root, q, cb) -> cb.greaterThanOrEqualTo(root.get("salary"), minSalary);
+            finalSpec = finalSpec == null ? s : finalSpec.and(s);
+        }
+        if (maxSalary != null) {
+            Specification<Job> s = (root, q, cb) -> cb.lessThanOrEqualTo(root.get("salary"), maxSalary);
+            finalSpec = finalSpec == null ? s : finalSpec.and(s);
+        }
+        if (level != null && !level.isBlank()) {
+            Specification<Job> s = (root, q, cb) -> cb.equal(root.get("level").as(String.class), level.toUpperCase());
+            finalSpec = finalSpec == null ? s : finalSpec.and(s);
+        }
+        if (location != null && !location.isBlank()) {
+            Specification<Job> s = (root, q, cb) -> cb.like(cb.lower(root.get("location")), "%" + location.toLowerCase() + "%");
+            finalSpec = finalSpec == null ? s : finalSpec.and(s);
+        }
+        if (skillId != null) {
+            Specification<Job> s = (root, q, cb) -> {
+                q.distinct(true);
+                return cb.equal(root.join("skills").get("id"), skillId);
+            };
+            finalSpec = finalSpec == null ? s : finalSpec.and(s);
+        }
+
+        return ResponseEntity.ok(this.jobService.FindAllJobs(finalSpec, pageable));
     }
 
     @GetMapping("/jobs/by-company")

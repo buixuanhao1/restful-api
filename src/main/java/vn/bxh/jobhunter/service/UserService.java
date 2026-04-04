@@ -41,9 +41,12 @@ public class UserService {
                     user.setCompany(company);
                 }
             }
-            if(user.getRole()!=null){
+            if(user.getRole() != null && user.getRole().getId() != 0){
                 Optional<Role> roleOptional = this.roleRepository.findById(user.getRole().getId());
                 roleOptional.ifPresent(user::setRole);
+            } else {
+                // Mặc định gán role USER (id=2) nếu không có role
+                this.roleRepository.findById(2L).ifPresent(user::setRole);
             }
             return this.convertToResCreateUserDTO(this.userRepository.save(user));
         }
