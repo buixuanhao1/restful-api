@@ -55,23 +55,15 @@ public class ResumeService {
     }
 
     public ResultPaginationDTO GetAllByUser(Pageable pageable){
-        String email = SecurityUtil.getCurrentUserLogin().isPresent()?SecurityUtil.getCurrentUserLogin().get():"";
+        String email = SecurityUtil.getCurrentUserLogin().orElse("");
         User user = this.userRepository.findByEmail(email);
-        Page<Resume> pageResume = this.resumeRepository.findAll(pageable);
-        List<Resume> listResumeOfUser =new ArrayList<>();
-        for(Resume re : pageResume.getContent()){
-            if(re.getUser()!=null){
-                if(re.getUser().equals(user)){
-                    listResumeOfUser.add(re);
-                }
-            }
-        }
+        Page<Resume> pageResume = this.resumeRepository.findByUser(user, pageable);
         ResultPaginationDTO resultPaginationDTO = new ResultPaginationDTO();
         ResultPaginationDTO.Meta meta = new ResultPaginationDTO.Meta(
                 pageResume.getNumber()+1, pageResume.getSize(), pageResume.getTotalPages(), pageResume.getTotalElements());
         resultPaginationDTO.setMeta(meta);
         List<ResResumeDTO> resResumeDTOS = new ArrayList<>();
-        for (Resume resume : listResumeOfUser){
+        for (Resume resume : pageResume.getContent()){
             resResumeDTOS.add(this.ConvertToResResumeDTO(resume));
         }
         resultPaginationDTO.setResult(resResumeDTOS);

@@ -82,8 +82,23 @@ public class AuthController {
         userLogin.setId(userDB.getId());
         userLogin.setName(userDB.getName());
         userLogin.setEmail(userDB.getEmail());
-        userLogin.setRole(userDB.getRole());
-        userLogin.setCompany(userDB.getCompany());
+        userLogin.setAge(userDB.getAge());
+        userLogin.setGender(userDB.getGender());
+        userLogin.setAddress(userDB.getAddress());
+        if (userDB.getRole() != null) {
+            ResLoginDTO.RoleLogin roleLogin = new ResLoginDTO.RoleLogin();
+            roleLogin.setId(userDB.getRole().getId());
+            roleLogin.setName(userDB.getRole().getName());
+            if (userDB.getRole().getPermissions() != null) {
+                roleLogin.setPermissions(userDB.getRole().getPermissions().stream().map(p -> 
+                    new ResLoginDTO.PermissionLogin(p.getId(), p.getName(), p.getApiPath(), p.getMethod(), p.getModule())
+                ).collect(java.util.stream.Collectors.toList()));
+            }
+            userLogin.setRole(roleLogin);
+        }
+        if (userDB.getCompany() != null) {
+            userLogin.setCompany(new ResLoginDTO.CompanyLogin(userDB.getCompany().getId(), userDB.getCompany().getName()));
+        }
 
         ResLoginDTO resLoginDTO = new ResLoginDTO();
         resLoginDTO.setUser(userLogin);
@@ -120,8 +135,23 @@ public class AuthController {
             userLogin.setId(userDB.getId());
             userLogin.setName(userDB.getName());
             userLogin.setEmail(userDB.getEmail());
-            userLogin.setRole(userDB.getRole());
-            userLogin.setCompany(userDB.getCompany());
+            userLogin.setAge(userDB.getAge());
+            userLogin.setGender(userDB.getGender());
+            userLogin.setAddress(userDB.getAddress());
+            if (userDB.getRole() != null) {
+                ResLoginDTO.RoleLogin roleLogin = new ResLoginDTO.RoleLogin();
+                roleLogin.setId(userDB.getRole().getId());
+                roleLogin.setName(userDB.getRole().getName());
+                if (userDB.getRole().getPermissions() != null) {
+                    roleLogin.setPermissions(userDB.getRole().getPermissions().stream().map(p -> 
+                        new ResLoginDTO.PermissionLogin(p.getId(), p.getName(), p.getApiPath(), p.getMethod(), p.getModule())
+                    ).collect(java.util.stream.Collectors.toList()));
+                }
+                userLogin.setRole(roleLogin);
+            }
+            if (userDB.getCompany() != null) {
+                userLogin.setCompany(new ResLoginDTO.CompanyLogin(userDB.getCompany().getId(), userDB.getCompany().getName()));
+            }
         }
         ResLoginDTO.UserGetAccount userGetAccount = new ResLoginDTO.UserGetAccount();
         userGetAccount.setUser(userLogin);
@@ -147,7 +177,20 @@ public class AuthController {
         userLogin.setId(userDB.getId());
         userLogin.setName(userDB.getName());
         userLogin.setEmail(userDB.getEmail());
-        userLogin.setRole(userDB.getRole());
+        userLogin.setAge(userDB.getAge());
+        userLogin.setGender(userDB.getGender());
+        userLogin.setAddress(userDB.getAddress());
+        if (userDB.getRole() != null) {
+            ResLoginDTO.RoleLogin roleLogin = new ResLoginDTO.RoleLogin();
+            roleLogin.setId(userDB.getRole().getId());
+            roleLogin.setName(userDB.getRole().getName());
+            if (userDB.getRole().getPermissions() != null) {
+                roleLogin.setPermissions(userDB.getRole().getPermissions().stream().map(p -> 
+                    new ResLoginDTO.PermissionLogin(p.getId(), p.getName(), p.getApiPath(), p.getMethod(), p.getModule())
+                ).collect(java.util.stream.Collectors.toList()));
+            }
+            userLogin.setRole(roleLogin);
+        }
 
         ResLoginDTO resLoginDTO = new ResLoginDTO();
         resLoginDTO.setUser(userLogin);
