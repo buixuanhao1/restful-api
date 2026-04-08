@@ -169,17 +169,14 @@ public class AuthController {
                 .body(resLoginDTO);
     }
 
-    /**
-     * POST /api/v1/auth/logout
-     * Clears the refresh token and expires the cookie.
-     */
     @PostMapping("/auth/logout")
+    @ApiMessage("Dang xuat thanh cong")
     public ResponseEntity<Object> logoutOut() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
         this.userService.HandleSetFreshToken(email, null);
 
-        ResponseCookie deleteSpringCookie = ResponseCookie.from("refresh_token", null)
+        ResponseCookie deleteSpringCookie = ResponseCookie.from("refresh_token", "")
                 .httpOnly(true)
                 .secure(true)
                 .path("/")
@@ -199,7 +196,7 @@ public class AuthController {
         }
         String otp = this.userService.generateAndSaveOtp(dto.getEmail());
         this.emailService.sendOtpEmail(dto.getEmail(), userDB.getName(), otp);
-        return ResponseEntity.ok(null);
+        return ResponseEntity.ok(java.util.Map.of("message", "OTP sent successfully"));
     }
 
     /**
@@ -209,8 +206,8 @@ public class AuthController {
     @PostMapping("/auth/verify-otp")
     @ApiMessage("Xac thuc OTP thanh cong")
     public ResponseEntity<Object> verifyOtp(@Valid @RequestBody ReqVerifyPinDTO dto) {
-        this.userService.verifyOtp(dto.getEmail(), dto.getPin());
-        return ResponseEntity.ok(null);
+        this.userService.verifyOtp(dto.getEmail(), dto.getOtp());
+        return ResponseEntity.ok(java.util.Map.of("message", "OTP verified successfully"));
     }
 
     /**
@@ -220,7 +217,7 @@ public class AuthController {
     @PostMapping("/auth/reset-password")
     @ApiMessage("Dat lai mat khau thanh cong")
     public ResponseEntity<Object> resetPassword(@Valid @RequestBody ReqResetPasswordDTO dto) {
-        this.userService.resetPassword(dto.getEmail(), dto.getPin(), dto.getNewPassword(), this.passwordEncoder);
-        return ResponseEntity.ok(null);
+        this.userService.resetPassword(dto.getEmail(), dto.getOtp(), dto.getNewPassword(), this.passwordEncoder);
+        return ResponseEntity.ok(java.util.Map.of("message", "Password reset successfully"));
     }
 }
