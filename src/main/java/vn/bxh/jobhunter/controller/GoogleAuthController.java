@@ -54,8 +54,23 @@ public class GoogleAuthController {
             userLogin.setId(user.getId());
             userLogin.setName(user.getName());
             userLogin.setEmail(user.getEmail());
-            userLogin.setRole(user.getRole());
-            userLogin.setCompany(user.getCompany());
+            userLogin.setAge(user.getAge());
+            userLogin.setGender(user.getGender());
+            userLogin.setAddress(user.getAddress());
+            if (user.getRole() != null) {
+                ResLoginDTO.RoleLogin roleLogin = new ResLoginDTO.RoleLogin();
+                roleLogin.setId(user.getRole().getId());
+                roleLogin.setName(user.getRole().getName());
+                if (user.getRole().getPermissions() != null) {
+                    roleLogin.setPermissions(user.getRole().getPermissions().stream().map(p -> 
+                        new ResLoginDTO.PermissionLogin(p.getId(), p.getName(), p.getApiPath(), p.getMethod(), p.getModule())
+                    ).collect(java.util.stream.Collectors.toList()));
+                }
+                userLogin.setRole(roleLogin);
+            }
+            if (user.getCompany() != null) {
+                userLogin.setCompany(new ResLoginDTO.CompanyLogin(user.getCompany().getId(), user.getCompany().getName()));
+            }
 
             ResLoginDTO resLoginDTO = new ResLoginDTO();
             resLoginDTO.setUser(userLogin);
@@ -77,7 +92,7 @@ public class GoogleAuthController {
                     .header(HttpHeaders.SET_COOKIE, springCookie.toString())
                     .body(resLoginDTO);
 
-        } catch (GeneralSecurityException | IOException | IllegalArgumentException e) {
+        } catch (Exception e) {
             throw new IdInvalidException("Google authentication failed: " + e.getMessage());
         }
     }

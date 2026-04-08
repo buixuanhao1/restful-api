@@ -18,8 +18,8 @@ public class SavedJobController {
     private final SavedJobService savedJobService;
 
     @GetMapping
-    public ResponseEntity<List<SavedJob>> getSavedJobs(Principal principal) {
-        return ResponseEntity.ok(savedJobService.getSavedJobs(principal.getName()));
+    public ResponseEntity<List<vn.bxh.jobhunter.domain.response.ResSavedJobDTO>> getSavedJobs(Principal principal) {
+        return ResponseEntity.ok(savedJobService.getSavedJobsDTO(principal.getName()));
     }
 
     @GetMapping("/{jobId}/check")

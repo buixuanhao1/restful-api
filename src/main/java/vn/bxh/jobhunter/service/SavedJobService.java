@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.bxh.jobhunter.domain.Job;
+import vn.bxh.jobhunter.domain.Company;
+import vn.bxh.jobhunter.domain.Job;
 import vn.bxh.jobhunter.domain.SavedJob;
 import vn.bxh.jobhunter.domain.User;
 import vn.bxh.jobhunter.repository.JobRepository;
@@ -20,9 +22,38 @@ public class SavedJobService {
     private final UserRepository userRepository;
     private final JobRepository jobRepository;
 
-    public List<SavedJob> getSavedJobs(String email) {
+    public java.util.List<vn.bxh.jobhunter.domain.response.ResSavedJobDTO> getSavedJobsDTO(String email) {
         User user = userRepository.findByEmail(email);
-        return savedJobRepository.findByUserId(user.getId());
+        List<SavedJob> list = savedJobRepository.findByUserId(user.getId());
+        return list.stream().map(this::convertToDTO).collect(java.util.stream.Collectors.toList());
+    }
+
+    private vn.bxh.jobhunter.domain.response.ResSavedJobDTO convertToDTO(SavedJob savedJob) {
+        vn.bxh.jobhunter.domain.response.ResSavedJobDTO dto = new vn.bxh.jobhunter.domain.response.ResSavedJobDTO();
+        dto.setId(savedJob.getId());
+        dto.setCreatedAt(savedJob.getCreatedAt());
+
+        if (savedJob.getJob() != null) {
+            Job job = savedJob.getJob();
+            vn.bxh.jobhunter.domain.response.ResSavedJobDTO.JobSaved jobSaved = 
+                new vn.bxh.jobhunter.domain.response.ResSavedJobDTO.JobSaved();
+            jobSaved.setId(job.getId());
+            jobSaved.setName(job.getName());
+            jobSaved.setLocation(job.getLocation());
+            jobSaved.setSalary(job.getSalary());
+
+            if (job.getCompany() != null) {
+                Company company = job.getCompany();
+                vn.bxh.jobhunter.domain.response.ResSavedJobDTO.CompanySaved companySaved = 
+                    new vn.bxh.jobhunter.domain.response.ResSavedJobDTO.CompanySaved();
+                companySaved.setId(company.getId());
+                companySaved.setName(company.getName());
+                companySaved.setLogo(company.getLogo());
+                jobSaved.setCompany(companySaved);
+            }
+            dto.setJob(jobSaved);
+        }
+        return dto;
     }
 
     public boolean isSaved(String email, long jobId) {

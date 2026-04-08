@@ -41,6 +41,9 @@ public class PermissionInterceptor implements HandlerInterceptor {
         boolean isAdminPath = adminOnlyPrefixes.stream().anyMatch(prefix ->
                 path != null && (path.equals(prefix) || path.startsWith(prefix + "/")));
 
+        // Ngoại lệ: Cho phép mọi User truy cập API cập nhật profile của chính mình
+        if (path != null && path.equals("/api/v1/users/profile")) return true;
+
         if (!isAdminPath) return true;
 
         // Với admin path: kiểm tra user đã đăng nhập và có quyền không

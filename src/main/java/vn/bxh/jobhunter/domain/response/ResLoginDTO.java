@@ -20,8 +20,42 @@ public class ResLoginDTO {
         private long id;
         private String email;
         private String name;
-        private Role role;
-        private Company company;
+        private RoleLogin role;
+        private CompanyLogin company;
+        private Integer age;
+        private vn.bxh.jobhunter.util.Constant.GenderEnum gender;
+        private String address;
+    }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class RoleLogin {
+        private long id;
+        private String name;
+        private java.util.List<PermissionLogin> permissions;
+    }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class PermissionLogin {
+        private long id;
+        private String name;
+        private String apiPath;
+        private String method;
+        private String module;
+    }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class CompanyLogin {
+        private long id;
+        private String name;
     }
 
 

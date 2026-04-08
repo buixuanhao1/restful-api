@@ -79,4 +79,17 @@ public class UserController {
         return ResponseEntity.ok(this.userService.HandleFindAllUsers(spec, page));
     }
 
+    @PutMapping("/users/profile")
+    @ApiMessage("Update profile thành công")
+    public ResponseEntity<ResUserDTO> updateProfile(@RequestBody ReqUserUpdate profileUpdate) {
+        String email = vn.bxh.jobhunter.util.SecurityUtil.getCurrentUserLogin().orElse("");
+        User currentUser = this.userService.FindUserByEmail(email);
+        if (currentUser == null) {
+            throw new vn.bxh.jobhunter.util.error.IdInvalidException("User not found!");
+        }
+        profileUpdate.setId(currentUser.getId()); // Force update current user
+        User updated = this.userService.HandleUpdateUser(profileUpdate);
+        return ResponseEntity.ok(this.userService.convertToResUserDTO(updated));
+    }
+
 }
