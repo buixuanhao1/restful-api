@@ -196,16 +196,16 @@ public class UserService {
      * Verifies the OTP. Returns true if correct and not expired.
      * Throws IdInvalidException with appropriate message otherwise.
      */
-    public boolean verifyOtp(String email, String pin) {
+    public boolean verifyOtp(String email, String otp) {
         User user = this.FindUserByEmail(email);
         if (user == null) {
             throw new vn.bxh.jobhunter.util.error.IdInvalidException("Email khong ton tai");
         }
-        if (user.getResetPin() == null || !user.getResetPin().equals(pin)) {
-            throw new vn.bxh.jobhunter.util.error.IdInvalidException("Ma PIN khong chinh xac");
+        if (user.getResetPin() == null || !user.getResetPin().equals(otp)) {
+            throw new vn.bxh.jobhunter.util.error.IdInvalidException("Ma OTP khong chinh xac");
         }
         if (user.getResetPinExpiry() == null || java.time.Instant.now().isAfter(user.getResetPinExpiry())) {
-            throw new vn.bxh.jobhunter.util.error.IdInvalidException("Ma PIN da het han. Vui long yeu cau gui lai");
+            throw new vn.bxh.jobhunter.util.error.IdInvalidException("Ma OTP da het han. Vui long yeu cau gui lai");
         }
         return true;
     }
@@ -214,9 +214,9 @@ public class UserService {
      * Resets the password after OTP verification.
      * Clears OTP fields after successful reset.
      */
-    public void resetPassword(String email, String pin, String newPassword,
-                               org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
-        verifyOtp(email, pin); // re-verify before changing
+    public void resetPassword(String email, String otp, String newPassword,
+                                org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
+        verifyOtp(email, otp); // re-verify before changing
         User user = this.FindUserByEmail(email);
         user.setPassword(passwordEncoder.encode(newPassword));
         user.setResetPin(null);
