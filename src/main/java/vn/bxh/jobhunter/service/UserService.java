@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import vn.bxh.jobhunter.domain.Company;
 import vn.bxh.jobhunter.domain.Role;
+import vn.bxh.jobhunter.domain.request.ReqRegisterDTO;
 import vn.bxh.jobhunter.domain.request.ReqUserUpdate;
 import vn.bxh.jobhunter.domain.response.ResCompanyDTO;
 import vn.bxh.jobhunter.domain.response.ResultPaginationDTO.Meta;
@@ -20,6 +21,8 @@ import vn.bxh.jobhunter.domain.response.ResultPaginationDTO;
 import vn.bxh.jobhunter.repository.CompanyRepository;
 import vn.bxh.jobhunter.repository.RoleRepository;
 import vn.bxh.jobhunter.repository.UserRepository;
+import vn.bxh.jobhunter.util.Constant.AuthProviderEnum;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service
 public class UserService {
@@ -45,11 +48,31 @@ public class UserService {
                 Optional<Role> roleOptional = this.roleRepository.findById(user.getRole().getId());
                 roleOptional.ifPresent(user::setRole);
             } else {
-                // Mặc định gán role USER (id=2) nếu không có role
                 this.roleRepository.findById(2L).ifPresent(user::setRole);
             }
             return this.convertToResCreateUserDTO(this.userRepository.save(user));
         }
+
+    /**
+     * Registers a new user from a DTO.
+     * Enforces: Candidate role (id=2), LOCAL auth provider, encoded password.
+     * Client cannot override role or id via this endpoint.
+     */
+    public ResCreateUserDTO registerUser(ReqRegisterDTO dto, PasswordEncoder passwordEncoder) {
+        User user = new User();
+        user.setName(dto.getName());
+        user.setEmail(dto.getEmail());
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setAge(dto.getAge());
+        user.setGender(dto.getGender());
+        user.setAddress(dto.getAddress());
+        user.setAuthProvider(AuthProviderEnum.LOCAL);
+
+        // Always assign Candidate role (id=2) — cannot be overridden by client
+        this.roleRepository.findById(2L).ifPresent(user::setRole);
+
+        return this.convertToResCreateUserDTO(this.userRepository.save(user));
+    }
 
     public void HandleDeleteUser(Long id) {
         this.userRepository.deleteById(id);
@@ -149,7 +172,55 @@ public class UserService {
         return this.userRepository.existsByEmail(email);
     }
 
-    public User FindByEmailAndRefreshToken(String email,String token){
+    public User FindByEmailAndRefreshToken(String email, String token) {
         return this.userRepository.findByEmailAndRefreshToken(email, token);
+    }
+
+    /**
+     * Generates a 6-digit OTP, saves it with a 5-minute expiry to the user,
+     * and returns the OTP string for email sending.
+     */
+    public String generateAndSaveOtp(String email) {
+        User user = this.FindUserByEmail(email);
+        if (user == null) {
+            throw new vn.bxh.jobhunter.util.error.IdInvalidException("Email khong ton tai trong he thong");
+        }
+        String otp = String.format("%06d", new java.util.Random().nextInt(999999));
+        user.setResetPin(otp);
+        user.setResetPinExpiry(java.time.Instant.now().plusSeconds(300)); // 5 phut
+        this.userRepository.save(user);
+        return otp;
+    }
+
+    /**
+     * Verifies the OTP. Returns true if correct and not expired.
+     * Throws IdInvalidException with appropriate message otherwise.
+     */
+    public boolean verifyOtp(String email, String pin) {
+        User user = this.FindUserByEmail(email);
+        if (user == null) {
+            throw new vn.bxh.jobhunter.util.error.IdInvalidException("Email khong ton tai");
+        }
+        if (user.getResetPin() == null || !user.getResetPin().equals(pin)) {
+            throw new vn.bxh.jobhunter.util.error.IdInvalidException("Ma PIN khong chinh xac");
+        }
+        if (user.getResetPinExpiry() == null || java.time.Instant.now().isAfter(user.getResetPinExpiry())) {
+            throw new vn.bxh.jobhunter.util.error.IdInvalidException("Ma PIN da het han. Vui long yeu cau gui lai");
+        }
+        return true;
+    }
+
+    /**
+     * Resets the password after OTP verification.
+     * Clears OTP fields after successful reset.
+     */
+    public void resetPassword(String email, String pin, String newPassword,
+                               org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
+        verifyOtp(email, pin); // re-verify before changing
+        User user = this.FindUserByEmail(email);
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setResetPin(null);
+        user.setResetPinExpiry(null);
+        this.userRepository.save(user);
     }
 }

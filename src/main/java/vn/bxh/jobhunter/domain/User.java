@@ -5,6 +5,7 @@ import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
 import vn.bxh.jobhunter.util.Constant.GenderEnum;
+import vn.bxh.jobhunter.util.Constant.AuthProviderEnum;
 import vn.bxh.jobhunter.util.SecurityUtil;
 
 import java.time.Instant;
@@ -27,7 +28,6 @@ public class User {
     @NotBlank(message = "Email cannot be empty!")
     private String email;
 
-    @NotBlank(message = "Password cannot be empty!")
     @Size(min = 3, message = "Password must be at least 3 characters!")
     private String password;
 
@@ -40,8 +40,17 @@ public class User {
 
     @NotBlank(message = "Address cannot be empty!")
     private String address;
+
+    @Enumerated(EnumType.STRING)
+    private AuthProviderEnum authProvider;
+
     @Column(columnDefinition = "MEDIUMTEXT")
     private String refreshToken;
+
+    // Password reset OTP fields
+    private String resetPin;
+    private Instant resetPinExpiry;
+
     private Instant createdAt;
     private Instant updatedAt;
     private String createdBy;

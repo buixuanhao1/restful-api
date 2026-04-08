@@ -21,25 +21,24 @@ repositories {
 }
 
 dependencies {
-	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
-	implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
-	implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
-	implementation("com.turkraft.springfilter:jpa:3.1.7")
-	implementation("org.springframework.boot:spring-boot-starter-mail")
-	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-	implementation("org.springframework.boot:spring-boot-starter-security")
-	implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
-	implementation("org.springframework.boot:spring-boot-starter-validation")
-	implementation("org.springframework.boot:spring-boot-starter-web")
-	implementation("org.springframework.boot:spring-boot-starter-websocket")  // ← thêm vào đây
-
-	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
-	implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
-	developmentOnly("org.springframework.boot:spring-boot-devtools")
-	runtimeOnly("com.mysql:mysql-connector-j")
-	testImplementation("org.springframework.boot:spring-boot-starter-test")
-	testImplementation("org.springframework.security:spring-security-test")
-	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
+    implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+    implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
+    implementation("com.turkraft.springfilter:jpa:3.1.7")
+    implementation("org.springframework.boot:spring-boot-starter-mail")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-websocket")
+    implementation("com.google.api-client:google-api-client:2.2.0")
+    implementation("com.google.http-client:google-http-client-gson:1.44.1")
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+    developmentOnly("org.springframework.boot:spring-boot-devtools")
+    runtimeOnly("com.mysql:mysql-connector-j")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.security:spring-security-test")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 tasks.withType<Test> {
